@@ -119,25 +119,32 @@ class Create extends \Magento\Sales\Model\AdminOrder\Create
      * @param \Bkademy\Webpos\Api\Data\Checkout\ItemBuyRequestInterface[] $items
      * @return $this
      */
-    public function processItems($items){
+    public function processItems($items,$quoteId){
         if(!empty($items)){
             $newItems = [];
             $quoteItems = [];
             $quote = $this->getQuote();
+            //\Zend_Debug::dump($quote->getVisibleItem());
+            $from = 'quote';
             foreach ($items as $item) {
                 $quoteItem = $quote->getItemById($item->getItemId());
-                if($quoteItem){
-                    $quoteItems[$item->getItemId()] = $item->getData();
-                }else{
-                    $newItems[$item->getId()] = $item->getData();
+//                echo $quoteItem;die;
+                if($quoteItem) {
+                    $this->removeItem($item->getItemId(), $from);
+//                    die('fe');
                 }
+//                    $quoteItems[$item->getItemId()] = $item->getData();
+//                }else{
+                    $newItems[$item->getId()] = $item->getData();
+                //}
             }
+
             if(!empty($newItems)){
                 $this->addProducts($newItems);
             }
-            if(!empty($quoteItems)){
-                $this->updateQuoteItems($quoteItems);
-            }
+//            if(!empty($quoteItems)){
+//                $this->updateQuoteItems($quoteItems);
+//            }
         }
         return $this;
     }

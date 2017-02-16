@@ -2,6 +2,7 @@
 namespace Bkademy\Webpos\Model\Repository\Checkout;
 use Bkademy\Webpos\Api\Data\Checkout\QuoteDataInterface as QuoteDataInterface;
 use Bkademy\Webpos\Api\Data\Checkout\ResponseInterface as ResponseInterface;
+use Magento\Framework\Cache\Frontend\Adapter\Zend;
 
 class CheckoutRepository implements \Bkademy\Webpos\Api\Checkout\CheckoutRepositoryInterface
 {
@@ -71,9 +72,11 @@ class CheckoutRepository implements \Bkademy\Webpos\Api\Checkout\CheckoutReposit
     public function saveCart($quoteId, $items, $customerId, $section){
         $customer = $this->_customerRepository->getById($customerId);
         $this->_orderCreateModel->start($quoteId);
-        $this->_orderCreateModel->processItems($items);
+        $this->_orderCreateModel->processItems($items,$quoteId);
+//       \Zend_Debug::dump( $this->_getQuoteItems());die;
         $this->_orderCreateModel->assignCustomer($customer);
         $this->_orderCreateModel->finish();
+
         return $this->_getResponse(ResponseInterface::STATUS_SUCCESS, [], $section);
     }
 
@@ -226,12 +229,14 @@ class CheckoutRepository implements \Bkademy\Webpos\Api\Checkout\CheckoutReposit
     protected function _getQuoteItems(){
         $result = array();
         $items = $this->_orderCreateModel->getQuote()->getAllVisibleItems();
+
         if(count($items)){
             foreach ($items as $item){
                 $result[$item->getId()] = $item->getData();
                 $result[$item->getId()]['offline_item_id'] =  $item->getBuyRequest()->getData('item_id');
             }
         }
+
         return $result;
     }
 
@@ -240,12 +245,13 @@ class CheckoutRepository implements \Bkademy\Webpos\Api\Checkout\CheckoutReposit
      * @return array
      */
     protected function _getTotals(){
+
         $totals = $this->_orderCreateModel->getQuote()->getTotals();
         $totalsResult = array();
         foreach ($totals as $total) {
             $totalsResult[] = $total->getData();
         }
-        return $totalsResult;
+       return $totalsResult;
     }
 
     /**
